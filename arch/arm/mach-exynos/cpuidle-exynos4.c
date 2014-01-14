@@ -341,7 +341,7 @@ static int check_usb_op(void)
 #endif
 }
 
-#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
+#ifdef CONFIG_MACH_U1_NA_SPR
 #include "../../../sound/soc/samsung/srp-types.h"
 #include "../../../sound/soc/samsung/idma.h"
 #endif
@@ -375,8 +375,27 @@ static inline int check_gps_uart_op(void)
 #if defined(CONFIG_INTERNAL_MODEM_IF) || defined(CONFIG_SAMSUNG_PHONE_TTY)
 static int check_idpram_op(void)
 {
+#ifdef CONFIG_SEC_MODEM_U1_SPR
+	/*
+	If GPIO_CP_DUMP_INT is HIGH, dpram is in use.
+	If there is a cmd in cp's mbx, dpram is in use.
+	*/
+
+	/* block any further write's into dpram from ap*/
+	gpio_set_value(GPIO_PDA_ACTIVE, 0);
+
+	if (gpio_get_value(GPIO_CP_DUMP_INT) ||
+		!gpio_get_value(GPIO_DPRAM_INT_CP_N)) {
+		pr_info("LPA. dpram is in use\n");
+		gpio_set_value(GPIO_PDA_ACTIVE, 1);
+		return 1;
+	}
+
+	/* dpram is not in use, so keep GPIO_PDA_ACTIVE low and return */
+	return 0;
+#else
 	/* This pin is high when CP might be accessing dpram */
-#ifdef CONFIG_MACH_U1_NA_SPR
+#if defined(CONFIG_MACH_U1_NA_SPR) && defined(CONFIG_SAMSUNG_PHONE_TTY)
 	int cp_int = __raw_readl(S5P_VA_GPIO2 + 0xC24) & 4;
 #else
 	int cp_int = gpio_get_value(GPIO_CP_AP_DPRAM_INT);
@@ -384,6 +403,7 @@ static int check_idpram_op(void)
 	if (cp_int != 0)
 		pr_info("%s cp_int is high.\n", __func__);
 	return cp_int;
+#endif
 }
 #endif
 
@@ -430,7 +450,7 @@ static int exynos4_check_operation(void)
 		return 1;
 #endif
 
-#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
+#ifdef CONFIG_MACH_U1_NA_SPR
 #ifdef CONFIG_SND_SAMSUNG_RP
 	if (!srp_get_status(IS_RUNNING))
 		return 1;

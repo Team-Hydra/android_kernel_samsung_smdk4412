@@ -722,6 +722,7 @@ source "drivers/misc/modem_if_na/Kconfig"
 if MACH_U1
 source "drivers/misc/modem_if_u1/Kconfig"
 endif
+source "drivers/misc/modem_if_na_spr/Kconfig"
 
 config SLP_LOWMEM_NOTIFY
 	bool "Driver for SLP Low Memory Notification"
