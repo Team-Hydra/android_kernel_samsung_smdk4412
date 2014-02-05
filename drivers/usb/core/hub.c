@@ -1378,8 +1378,12 @@ descriptor_error:
 	if (hdev->speed == USB_SPEED_HIGH)
 		highspeed_hubs++;
 
-	if (hub_configure(hub, endpoint) >= 0)
+	if (hub_configure(hub, endpoint) >= 0) {
+#if defined(CONFIG_LINK_DEVICE_HSIC) || defined(CONFIG_MDM_HSIC_PM)
+		usb_detect_quirks(hdev);
+#endif
 		return 0;
+	}
 
 	hub_disconnect (intf);
 	return -ENODEV;
@@ -1927,9 +1931,6 @@ int usb_new_device(struct usb_device *udev)
 	/* Tell the world! */
 	announce_device(udev);
 #ifdef CONFIG_SAMSUNG_SMARTDOCK
-#if defined(CONFIG_MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK)
-	call_audiodock_notify(udev);
-#endif
 	call_battery_notify(udev, 1);
 #endif
 
@@ -2317,11 +2318,6 @@ static int check_port_resume_type(struct usb_device *udev,
 		if (portchange & USB_PORT_STAT_C_ENABLE)
 			clear_port_feature(hub->hdev, port1,
 					USB_PORT_FEAT_C_ENABLE);
-		#ifdef CONFIG_MDM_HSIC_PM
-		/* MDM9x15, HSIC deivce do need this delay at LPA wake */
-		if (udev->quirks & USB_QUIRK_HSIC_TUNE)
-			msleep(30);
-		#endif
 	}
 
 	return status;

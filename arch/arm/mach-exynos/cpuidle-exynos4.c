@@ -341,7 +341,7 @@ static int check_usb_op(void)
 #endif
 }
 
-#ifdef CONFIG_MACH_U1_NA_SPR
+#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
 #include "../../../sound/soc/samsung/srp-types.h"
 #include "../../../sound/soc/samsung/idma.h"
 #endif
@@ -450,7 +450,7 @@ static int exynos4_check_operation(void)
 		return 1;
 #endif
 
-#ifdef CONFIG_MACH_U1_NA_SPR
+#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
 #ifdef CONFIG_SND_SAMSUNG_RP
 	if (!srp_get_status(IS_RUNNING))
 		return 1;
@@ -761,7 +761,7 @@ early_wakeup:
 			       ARRAY_SIZE(exynos4_lpa_save));
 
 #ifdef CONFIG_EXYNOS4_CPUFREQ
-	if (!soc_is_exynos4210()) {
+	if ((exynos_result_of_asv > 1) && !soc_is_exynos4210()) {
 		exynos4x12_set_abb_member(ABB_ARM, abb_val);
 		exynos4x12_set_abb_member(ABB_INT, abb_val_int);
 	}
@@ -814,7 +814,7 @@ static struct cpuidle_state exynos4_cpuidle_set[] = {
 	[1] = {
 		.enter			= exynos4_enter_lowpower,
 		.exit_latency		= 300,
-		.target_residency	= 10000,
+		.target_residency	= 5000,
 		.flags			= CPUIDLE_FLAG_TIME_VALID,
 		.name			= "LOW_POWER",
 		.desc			= "ARM power down",
@@ -1093,7 +1093,7 @@ static int __init exynos4_init_cpuidle(void)
 
 	ret = cpuidle_register_driver(&exynos4_idle_driver);
 
-	if(ret < 0){
+	if (ret < 0) {
 		printk(KERN_ERR "exynos4 idle register driver failed\n");
 		return ret;
 	}

@@ -816,6 +816,7 @@ static int fimc_configure_subdev(struct fimc_control *ctrl)
 	if (!sd) {
 		fimc_err("%s: v4l2 subdev board registering failed\n",
 				__func__);
+		return -ENODEV;
 	}
 	/* Assign subdev to proper camera device pointer */
 	ctrl->cam->sd = sd;
@@ -1942,7 +1943,6 @@ int fimc_reqbufs_capture_mmap(void *fh, struct v4l2_requestbuffers *b)
 		break;
 
 	case V4L2_PIX_FMT_NV12:
-	        
 		fimc_info1("%s : 2plane for NV12\n", __func__);
 		ret = fimc_alloc_buffers(ctrl, 2,
 			cap->fmt.width * cap->fmt.height, SZ_64K, bpp, cap->pktdata_enable, cap->pktdata_size);
@@ -3001,8 +3001,9 @@ int fimc_streamoff_capture(void *fh)
 			else
 				s3c_csis_stop(CSI_CH_1);
 		}
+		fimc_err("fimc_hwset_reset in\n");
 		fimc_hwset_reset(ctrl);
-
+		fimc_err("fimc_hwset_reset out\n");
 #ifdef CONFIG_VIDEO_IMPROVE_STREAMOFF
 		if (ctrl->cam->sd && (get_fimc_dev()->active_camera != 0))
 #else
@@ -3138,17 +3139,16 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 	int available_bufnum;
 	size_t length = 0;
 	int i;
+	unsigned long spin_flags;
 
 	if (!cap || !ctrl->cam) {
 		fimc_err("%s: No capture device.\n", __func__);
 		return -ENODEV;
 	}
 
-	mutex_lock(&ctrl->v4l2_lock);
 	if (pdata->hw_ver >= 0x51) {
 		if (cap->bufs[idx].state != VIDEOBUF_IDLE) {
 			fimc_err("%s: invalid state idx : %d\n", __func__, idx);
-			mutex_unlock(&ctrl->v4l2_lock);
 			return -EINVAL;
 		} else {
 			if (b->memory == V4L2_MEMORY_USERPTR) {
@@ -3170,7 +3170,6 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 				if (ret < 0) {
 					fimc_err("%s: _qbuf_dmabuf error.\n",
 						__func__);
-					mutex_unlock(&ctrl->v4l2_lock);
 					return -ENODEV;
 				}
 				for (i = 0; i < vb->num_planes; i++) {
@@ -3184,7 +3183,6 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 					} else {
 						fimc_err("%s: Wrong sg value.\n",
 							__func__);
-						mutex_unlock(&ctrl->v4l2_lock);
 						return -ENODEV;
 					}
 				}
@@ -3206,6 +3204,7 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 #endif
 			}
 
+			spin_lock_irqsave(&ctrl->inq_lock, spin_flags);
 			fimc_hwset_output_buf_sequence(ctrl, idx, FIMC_FRAMECNT_SEQ_ENABLE);
 			cap->bufs[idx].state = VIDEOBUF_QUEUED;
 			if (ctrl->status == FIMC_BUFFER_STOP) {
@@ -3220,12 +3219,12 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 					ctrl->restart = true;
 				}
 			}
+			spin_unlock_irqrestore(&ctrl->inq_lock, spin_flags);
+
 		}
 	} else {
 		fimc_add_inqueue(ctrl, b->index);
 	}
-
-	mutex_unlock(&ctrl->v4l2_lock);
 
 	if (!cap->cacheable)
 		return 0;

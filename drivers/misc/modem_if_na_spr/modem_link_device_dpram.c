@@ -339,13 +339,14 @@ void idpram_timeout_handler(struct idpram_link_pm_data *pm_data)
 {
 	struct io_device *iod = dpram_find_iod(pm_data->dpld, FMT_IDX);
 
-	pr_info("MIF: <%s>\n", __func__);
+	pr_err("MIF: <%s>\n", __func__);
 
-	if (!gpio_get_value(pm_data->mdata->gpio_phone_active)) {
+	if (iod && iod->mc->phone_state == STATE_ONLINE) {
 		pr_err("MIF: <%s:%s> (Crash silent Reset)\n",
 			__func__, pm_data->dpld->ld.name);
 
-		if (iod && iod->modem_state_changed)
+		if (iod->modem_state_changed)
+
 			iod->modem_state_changed(iod, STATE_CRASH_EXIT);
 	}
 }
@@ -397,7 +398,7 @@ static void idpram_resume_retry(struct work_struct *work)
 		wake_lock_timeout(&pm_data->hold_wlock, HZ*7);
 		idpram_write_lock(pm_data, 0);
 
-		kernel_sec_dump_cp_handle();
+		/* kernel_sec_dump_cp_handle(); */
 	}
 
 	pr_info("MIF: <%s->\n", __func__);
@@ -611,7 +612,8 @@ static int idpram_pre_suspend(struct idpram_link_pm_data *pm_data)
 
 	if (!timeout_ret && !suspend_retry) {
 		pr_err("MIF: no response for PDA_SLEEP cmd\n");
-		kernel_sec_dump_cp_handle();
+		/* kernel_sec_dump_cp_handle(); */
+		idpram_timeout_handler(pm_data);
 	}
 
 	pr_info("MIF: last responce from cp = 0x%X\n",

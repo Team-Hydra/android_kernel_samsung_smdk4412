@@ -38,6 +38,7 @@ static enum power_supply_property sec_battery_props[] = {
 	POWER_SUPPLY_PROP_VOLTAGE_AVG,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
 	POWER_SUPPLY_PROP_CURRENT_AVG,
+	POWER_SUPPLY_PROP_CHARGE_NOW,
 	POWER_SUPPLY_PROP_CAPACITY,
 	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_TEMP_AMBIENT,
@@ -112,12 +113,14 @@ struct sec_battery_info {
 	unsigned long charging_start_time;
 	unsigned long charging_passed_time;
 	unsigned long charging_next_time;
+	unsigned long charging_fullcharged_time;
 
 	/* temperature check */
 	int temperature;	/* battery temperature */
 	int temper_amb;		/* target temperature */
 
 	int temp_adc;
+	int temp_ambient_adc;
 
 	int temp_high_threshold;
 	int temp_high_recovery;
@@ -130,6 +133,7 @@ struct sec_battery_info {
 
 	/* charging */
 	unsigned int charging_mode;
+	bool is_recharging;
 	int cable_type;
 	int extended_cable_type;
 	struct wake_lock cable_wake_lock;

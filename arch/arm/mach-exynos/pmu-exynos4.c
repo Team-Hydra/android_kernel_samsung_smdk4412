@@ -107,7 +107,11 @@ static struct exynos4_pmu_conf exynos4212_pmu_config[] = {
 	{ S5P_DIS_IRQ_ARM_CORE1_CENTRAL_SYS,	{ 0, 0, 0 } },
 	{ S5P_ISP_ARM_SYS,			{ 1, 0, 0 } },
 	{ S5P_DIS_IRQ_ISP_ARM_LOCAL_SYS,	{ 0, 0, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_DIS_IRQ_ISP_ARM_CENTRAL_SYS,	{ 0, 0, 0 } },
+#else
 	{ S5P_DIS_IRQ_ISP_ARM_CENTRAL_SYS,	{ 1, 0, 0 } },
+#endif
 	{ S5P_ARM_COMMON_SYS,			{ 0, 0, 2 } },
 	{ S5P_ARM_L2_0_SYS,			{ 0, 0, 3 } },
 	{ S5P_ARM_L2_0_OPTION,			{ 0x10, 0x10, 0 } },
@@ -118,10 +122,18 @@ static struct exynos4_pmu_conf exynos4212_pmu_config[] = {
 	{ S5P_CMU_RESET_SYS,			{ 1, 1, 0 } },
 	{ S5P_DRAM_FREQ_DOWN_SYS,		{ 1, 1, 1 } },
 	{ S5P_DDRPHY_DLLOFF_SYS,		{ 1, 1, 1 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_LPDDR_PHY_DLL_LOCK_SYS,		{ 1, 0, 0 } },
+#else
 	{ S5P_LPDDR_PHY_DLL_LOCK_SYS,		{ 1, 1, 1 } },
+#endif
 	{ S5P_CMU_ACLKSTOP_COREBLK_SYS,		{ 1, 0, 0 } },
 	{ S5P_CMU_SCLKSTOP_COREBLK_SYS,		{ 1, 0, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_CMU_RESET_COREBLK_SYS,		{ 1, 1, 1 } },
+#else
 	{ S5P_CMU_RESET_COREBLK_SYS,		{ 1, 1, 0 } },
+#endif
 	{ S5P_APLL_SYSCLK_SYS,			{ 1, 0, 0 } },
 	{ S5P_MPLL_SYSCLK_SYS,			{ 1, 0, 0 } },
 	{ S5P_VPLL_SYSCLK_SYS,			{ 1, 0, 0 } },
@@ -143,19 +155,33 @@ static struct exynos4_pmu_conf exynos4212_pmu_config[] = {
 	{ S5P_CMU_RESET_MFC_SYS,		{ 1, 0, 0 } },
 	{ S5P_CMU_RESET_G3D_SYS,		{ 1, 0, 0 } },
 	{ S5P_CMU_RESET_LCD0_SYS,		{ 1, 0, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_CMU_RESET_ISP_SYS,		{ 1, 0, 0 } },
+#else
 	{ S5P_CMU_RESET_ISP_SYS,		{ 0, 0, 0 } },
+#endif
 	{ S5P_CMU_RESET_MAUDIO_SYS,		{ 1, 1, 0 } },
 	{ S5P_CMU_RESET_GPS_SYS,		{ 1, 0, 0 } },
 	{ S5P_TOP_BUS_SYS,			{ 3, 0, 0 } },
 	{ S5P_TOP_RETENTION_SYS,		{ 1, 0, 1 } },
 	{ S5P_TOP_PWR_SYS,			{ 3, 0, 3 } },
 	{ S5P_TOP_BUS_COREBLK_SYS,		{ 3, 0, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_TOP_RETENTION_COREBLK_SYS,	{ 1, 0, 0 } },
+	{ S5P_TOP_PWR_COREBLK_SYS,		{ 3, 0, 0 } },
+#else
 	{ S5P_TOP_RETENTION_COREBLK_SYS,	{ 1, 0, 1 } },
 	{ S5P_TOP_PWR_COREBLK_SYS,		{ 3, 0, 3 } },
+#endif
 	{ S5P_LOGIC_RESET_SYS,			{ 1, 1, 0 } },
 	{ S5P_OSCCLK_GATE_SYS,			{ 1, 0, 1 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_LOGIC_RESET_COREBLK_SYS,		{ 1, 1, 1 } },
+	{ S5P_OSCCLK_GATE_COREBLK_SYS,		{ 1, 0, 0 } },
+#else
 	{ S5P_LOGIC_RESET_COREBLK_SYS,		{ 1, 1, 0 } },
 	{ S5P_OSCCLK_GATE_COREBLK_SYS,		{ 1, 0, 1 } },
+#endif
 	{ S5P_ONENAND_MEM_SYS,			{ 3, 0, 0 } },
 	{ S5P_ONENAND_MEM_OPTION,		{ 0x10, 0x10, 0 } },
 	{ S5P_HSI_MEM_SYS,			{ 3, 0, 0 } },
@@ -180,7 +206,11 @@ static struct exynos4_pmu_conf exynos4212_pmu_config[] = {
 	{ S5P_PAD_RETENTION_MMCB_SYS,		{ 1, 0, 0 } },
 	{ S5P_PAD_RETENTION_EBIA_SYS,		{ 1, 0, 0 } },
 	{ S5P_PAD_RETENTION_EBIB_SYS,		{ 1, 0, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_PAD_RETENTION_GPIO_COREBLK_SYS,	{ 1, 1, 1 } },
+#else
 	{ S5P_PAD_RETENTION_GPIO_COREBLK_SYS,	{ 1, 0, 0 } },
+#endif
 	{ S5P_PAD_ISOLATION_SYS,		{ 1, 0, 0 } },
 	{ S5P_PAD_ISOLATION_COREBLK_SYS,	{ 1, 0, 0 } },
 	{ S5P_PAD_ALV_SEL_SYS,			{ 1, 0, 0 } },
@@ -189,8 +219,13 @@ static struct exynos4_pmu_conf exynos4212_pmu_config[] = {
 	{ S5P_GPIO_MODE_SYS,			{ 1, 0, 0 } },
 	{ S5P_GPIO_MODE_COREBLK_SYS,		{ 1, 0, 0 } },
 	{ S5P_GPIO_MODE_MAUDIO_SYS,		{ 1, 1, 0 } },
+#ifdef CONFIG_EXYNOS_C2C
+	{ S5P_TOP_ASB_RESET_SYS,		{ 1, 1, 0 } },
+	{ S5P_TOP_ASB_ISOLATION_SYS,		{ 1, 0, 0 } },
+#else
 	{ S5P_TOP_ASB_RESET_SYS,		{ 1, 1, 1 } },
 	{ S5P_TOP_ASB_ISOLATION_SYS,		{ 1, 0, 1 } },
+#endif
 	{ S5P_CAM_SYS,				{ 7, 0, 0 } },
 	{ S5P_TV_SYS,				{ 7, 0, 0 } },
 	{ S5P_MFC_SYS,				{ 7, 0, 0 } },
@@ -301,10 +336,12 @@ static struct exynos4_pmu_conf exynos4412_pmu_config[] = {
 	{ S5P_GPS_ALIVE_SYS,			{ 7, 0, 0 } },
 	{ S5P_CMU_SYSCLK_ISP_SYS,		{ 1, 0, 0 } },
 	{ S5P_CMU_SYSCLK_GPS_SYS,		{ 1, 0, 0 } },
+	{ S5P_LOGIC_RESET_DURATION3,	{ 0xf, 0xf, 0xf } },
 	{ S5P_XUSBXTI_SYS,			{ 1, 1, 0 } },
 };
 
 static struct exynos4_pmu_conf exynos4x12_c2c_pmu_conf[] = {
+	 { S5P_LPDDR_PHY_DLL_LOCK_SYS,  { 1, 0, 0 } },
 	{ S5P_CMU_RESET_COREBLK_SYS,		{ 1, 1, 1 } },
 	{ S5P_MPLLUSER_SYSCLK_SYS,		{ 1, 0, 0 } },
 	{ S5P_TOP_RETENTION_COREBLK_SYS,	{ 1, 0, 0 } },
@@ -325,7 +362,7 @@ static struct exynos4_c2c_pmu_conf exynos4_config_for_c2c[] = {
 	{ S5P_TOP_BUS_COREBLK_SYS,      0x0},
 	{ S5P_TOP_PWR_COREBLK_SYS,      0x0},
 	{ S5P_MPLL_SYSCLK_SYS,          0x0},
-#ifdef CONFIG_MACH_SMDK4212
+#ifdef CONFIG_EXYNOS_C2C
 	{ S5P_XUSBXTI_SYS,              0x0},
 #endif
 };
@@ -391,7 +428,10 @@ void exynos4_sys_powerdown_conf(enum sys_powerdown mode)
 
 void exynos4_c2c_request_pwr_mode(enum c2c_pwr_mode mode)
 {
-	exynos4_config_for_c2c[0].val = 0x3;
+	if (soc_is_exynos4412() && (samsung_rev() < EXYNOS4412_REV_1_0))
+		exynos4_config_for_c2c[0].val = 0x3;
+	else
+		exynos4_config_for_c2c[0].val = 0x0;
 
 	switch (mode) {
 	/* If C2C mode is MAXIMAL LATENCY */
@@ -401,7 +441,7 @@ void exynos4_c2c_request_pwr_mode(enum c2c_pwr_mode mode)
 			exynos4_config_for_c2c[2].val = 0x1;
 		else
 			exynos4_config_for_c2c[2].val = 0x0;
-#ifdef CONFIG_MACH_SMDK4212
+#ifdef CONFIG_EXYNOS_C2C
 		exynos4_config_for_c2c[3].val = 0x0;
 #endif
 		break;
@@ -409,7 +449,7 @@ void exynos4_c2c_request_pwr_mode(enum c2c_pwr_mode mode)
 	default:
 		exynos4_config_for_c2c[1].val = 0x3;
 		exynos4_config_for_c2c[2].val = 0x1;
-#ifdef CONFIG_MACH_SMDK4212
+#ifdef CONFIG_EXYNOS_C2C
 		exynos4_config_for_c2c[3].val = 0x1;
 #endif
 		break;
@@ -420,7 +460,9 @@ static int __init exynos4_pmu_init(void)
 {
 	unsigned int i;
 
+#ifndef CONFIG_EXYNOS_C2C
 	if(!soc_is_exynos4210())
+#endif
 		exynos4_reset_assert_ctrl(1);
 
 	if (soc_is_exynos4210()) {

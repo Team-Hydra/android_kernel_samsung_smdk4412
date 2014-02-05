@@ -34,10 +34,15 @@
 #elif defined(CONFIG_CHARGER_BQ24190) || \
 		defined(CONFIG_CHARGER_BQ24191)
 #include <linux/battery/charger/bq24190_charger.h>
+#elif defined(CONFIG_CHARGER_MAX77693)
+#include <linux/battery/charger/max77693_charger.h>
+#elif defined(CONFIG_CHARGER_NCP1851)
+#include <linux/battery/charger/ncp1851_charger.h>
 #endif
 
 static enum power_supply_property sec_charger_props[] = {
 	POWER_SUPPLY_PROP_STATUS,
+	POWER_SUPPLY_PROP_CHARGE_TYPE,
 	POWER_SUPPLY_PROP_HEALTH,
 	POWER_SUPPLY_PROP_ONLINE,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
@@ -86,7 +91,7 @@ ssize_t sec_chg_store_attrs(struct device *dev,
 
 #define SEC_CHARGER_ATTR(_name)				\
 {							\
-	.attr = {.name = #_name, .mode = 0666},	\
+	.attr = {.name = #_name, .mode = 0664},	\
 	.show = sec_chg_show_attrs,			\
 	.store = sec_chg_store_attrs,			\
 }

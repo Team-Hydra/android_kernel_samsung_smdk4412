@@ -131,8 +131,8 @@ static unsigned int _target(struct busfreq_data *data, struct opp *new)
 		voltage = data->get_int_volt(index);
 		regulator_set_voltage(data->vdd_int, voltage,
 				voltage + 25000);
-		/*if (data->busfreq_prepare)
-			data->busfreq_prepare(index);*/
+		if (data->busfreq_prepare)
+			data->busfreq_prepare(index);
 	}
 	if (data->set_qos)
 		data->set_qos(index);
@@ -140,8 +140,8 @@ static unsigned int _target(struct busfreq_data *data, struct opp *new)
 	data->target(index);
 
 	if (newfreq < currfreq) {
-		/*if (data->busfreq_post)
-			data->busfreq_post(index);*/
+		if (data->busfreq_post)
+			data->busfreq_post(index);
 		regulator_set_voltage(data->vdd_mif, voltage,
 				voltage + 25000);
 		voltage = data->get_int_volt(index);
@@ -174,7 +174,8 @@ static void exynos_busfreq_timer(struct work_struct *work)
 
 	update_busfreq_stat(data, index);
 	mutex_unlock(&busfreq_lock);
-	queue_delayed_work(system_freezable_wq, &data->worker, data->sampling_rate);
+	queue_delayed_work(system_freezable_wq, &data->worker,
+				(data->sampling_rate * data->rate_mult));
 }
 
 static int exynos_buspm_notifier_event(struct notifier_block *this,
@@ -507,6 +508,26 @@ out:
 	mutex_unlock(&busfreq_lock);
 }
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void exynos4x12_busfreq_early_suspend(struct early_suspend *h)
+{
+	struct busfreq_data *data = container_of(h, struct busfreq_data,
+				busfreq_early_suspend_handler);
+
+	data->rate_mult = 8;
+}
+
+static void exynos4x12_busfreq_late_resume(struct early_suspend *h)
+{
+	struct busfreq_data *data = container_of(h, struct busfreq_data,
+				busfreq_early_suspend_handler);
+
+	data->rate_mult = 1;
+	cancel_delayed_work(&data->worker);
+	queue_work(system_freezable_wq, &data->worker.work);
+}
+#endif
+
 static __devinit int exynos_busfreq_probe(struct platform_device *pdev)
 {
 	struct busfreq_data *data;
@@ -553,11 +574,24 @@ static __devinit int exynos_busfreq_probe(struct platform_device *pdev)
 		goto err_busfreq;
 	}
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	data->busfreq_early_suspend_handler.level =
+				EARLY_SUSPEND_LEVEL_DISABLE_FB;
+	data->busfreq_early_suspend_handler.suspend =
+				&exynos4x12_busfreq_early_suspend;
+	data->busfreq_early_suspend_handler.resume =
+				&exynos4x12_busfreq_late_resume;
+
+	register_early_suspend(&data->busfreq_early_suspend_handler);
+#endif
+
 	data->dev = &pdev->dev;
 	data->sampling_rate = usecs_to_jiffies(100000);
 	bus_ctrl.opp_lock =  NULL;
 	bus_ctrl.dev =  data->dev;
 	bus_ctrl.data =  data;
+
+	data->rate_mult = 1;
 
 	INIT_DELAYED_WORK(&data->worker, exynos_busfreq_timer);
 
@@ -617,6 +651,9 @@ static __devexit int exynos_busfreq_remove(struct platform_device *pdev)
 {
 	struct busfreq_data *data = platform_get_drvdata(pdev);
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	unregister_early_suspend(&data->busfreq_early_suspend_handler);
+#endif
 	unregister_pm_notifier(&data->exynos_buspm_notifier);
 	unregister_reboot_notifier(&data->exynos_reboot_notifier);
 	regulator_put(data->vdd_int);

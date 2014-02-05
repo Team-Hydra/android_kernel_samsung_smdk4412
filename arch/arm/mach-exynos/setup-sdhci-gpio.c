@@ -22,9 +22,7 @@
 #include <plat/gpio-cfg.h>
 #include <plat/regs-sdhci.h>
 #include <plat/sdhci.h>
-
-extern int s3c_gpio_slp_cfgpin(unsigned int pin, unsigned int config);
-extern int s3c_gpio_slp_setpull_updown(unsigned int pin, unsigned int config);
+#include "u1.h"
 
 #if defined(CONFIG_ARCH_EXYNOS4)
 void exynos4_setup_sdhci0_cfg_gpio(struct platform_device *dev, int width)

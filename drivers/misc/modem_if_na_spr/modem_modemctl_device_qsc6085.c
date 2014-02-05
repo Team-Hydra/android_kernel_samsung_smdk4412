@@ -33,8 +33,6 @@ static irqreturn_t phone_active_irq_handler(int irq, void *arg)
 	int phone_reset = gpio_get_value(mc->gpio_cp_reset);
 	int phone_active = gpio_get_value(mc->gpio_phone_active);
 	int phone_state = mc->phone_state;
-	struct dpram_link_device *dpld;
-
 
 	pr_info("MIF: <%s> state = %d, phone_reset = %d, phone_active = %d\n",
 		__func__, phone_state, phone_reset, phone_active);
@@ -54,23 +52,13 @@ static irqreturn_t phone_active_irq_handler(int irq, void *arg)
 		return IRQ_HANDLED;
 	}
 
-	if (mc->phone_state == STATE_ONLINE && !phone_active) {
-		dpld = to_dpram_link_device(mc->iod->link);
-		if (dpld->link_pm_data->last_pm_mailbox == 0xCC) {
-			pr_info("MIF: <%s> NV reset in progress. returning\n",
-				__func__);
-
-			return IRQ_HANDLED;
-		}
-	}
-
 	if (phone_reset && phone_active) {
 		phone_state = STATE_ONLINE;
 		if (mc->phone_state != STATE_BOOTING)
 			mc->iod->modem_state_changed(mc->iod, phone_state);
 	} else if (phone_reset && !phone_active) {
 		if (mc->phone_state == STATE_ONLINE) {
-			phone_state = STATE_CRASH_EXIT;
+			phone_state = STATE_CRASH_RESET;
 			mc->iod->modem_state_changed(mc->iod, phone_state);
 		}
 	} else {

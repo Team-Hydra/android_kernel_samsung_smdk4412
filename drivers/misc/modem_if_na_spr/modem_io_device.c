@@ -58,6 +58,7 @@ struct rfs_hdr {
 
 static const char const *modem_state_name[] = {
 	[STATE_OFFLINE]		= "OFFLINE",
+	[STATE_CRASH_RESET]	= "CRASH_RESET",
 	[STATE_CRASH_EXIT]	= "CRASH_EXIT",
 	[STATE_BOOTING]		= "BOOTING",
 	[STATE_ONLINE]		= "ONLINE",
@@ -654,7 +655,7 @@ static void io_dev_modem_state_changed(struct io_device *iod,
 	pr_info("MIF: %s state changed: %s\n", \
 				iod->name, modem_state_name[state]);
 
-	if (state == STATE_CRASH_EXIT)
+	if (state == STATE_CRASH_EXIT || state == STATE_CRASH_RESET)
 		wake_up(&iod->wq);
 }
 
@@ -682,7 +683,9 @@ static int misc_release(struct inode *inode, struct file *filp)
 	skb_queue_purge(&iod->sk_rx_q);
 
 	if (iod->format == IPC_FMT)
-		iod->mc->phone_state = STATE_BOOTING;
+		if (iod->mc->phone_state == STATE_CRASH_EXIT || \
+			iod->mc->phone_state == STATE_CRASH_RESET)
+			iod->mc->phone_state = STATE_BOOTING;
 
 	return 0;
 }
@@ -697,7 +700,8 @@ static unsigned int misc_poll(struct file *filp,
 	if ((!skb_queue_empty(&iod->sk_rx_q))
 				&& (iod->mc->phone_state != STATE_OFFLINE))
 		return POLLIN | POLLRDNORM;
-	else if (iod->mc->phone_state == STATE_CRASH_EXIT) {
+	else if (iod->mc->phone_state == STATE_CRASH_EXIT || \
+		iod->mc->phone_state == STATE_CRASH_RESET) {
 		printk_ratelimited(KERN_ERR "MIF: <%s> iod = %s, state = %s. "
 			"return POLLHUP\n", __func__, iod->name,
 			modem_state_name[iod->mc->phone_state]);
