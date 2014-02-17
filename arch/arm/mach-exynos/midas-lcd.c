@@ -44,16 +44,11 @@
 #include <linux/mdnie.h>
 #endif
 
-#ifdef CONFIG_BACKLIGHT_LP855X
-#include <linux/platform_data/lp855x.h>
-#endif
-
 struct s3c_platform_fb fb_platform_data;
 unsigned int lcdtype;
 static int __init lcdtype_setup(char *str)
 {
 	get_option(&str, &lcdtype);
-
 	return 1;
 }
 __setup("lcdtype=", lcdtype_setup);
@@ -365,14 +360,8 @@ static struct s3cfb_lcd s6c1372 = {
 	.p_width = 217,
 	.p_height = 135,
 	.bpp = 24,
-#if defined(CONFIG_MACH_P4NOTELTE_USA_SPR) || \
-	defined(CONFIG_MACH_P4NOTELTE_USA_VZW) || \
-	defined(CONFIG_MACH_P4NOTELTE_USA_USCC)
-	.freq = 55,
-#else
-	.freq = 60,
-#endif
 
+	.freq = 60,
 	.timing = {
 		.h_fp = 18,
 		.h_bp = 36,
@@ -487,7 +476,11 @@ static struct s3cfb_lcd s6e8aa0 = {
 
 	.freq = 60,
 #if defined(CONFIG_S6E8AA0_AMS480GYXX)
+	#if defined(CONFIG_MACH_M3_JPN_DCM)
+		.freq_limit = 43,
+	#else
 	.freq_limit = 40,
+#endif
 #endif
 
 	/* minumun value is 0 except for wr_act time. */
@@ -499,9 +492,21 @@ static struct s3cfb_lcd s6e8aa0 = {
 	},
 
 	.timing = {
+		#if defined(CONFIG_MACH_M3_JPN_DCM)
+			.h_fp = 15,
+		#else
 		.h_fp = 5,
+		#endif		
+		#if defined(CONFIG_MACH_M3_JPN_DCM)
+			.h_bp = 10,
+		#else
 		.h_bp = 5,
+		#endif
+		#if defined(CONFIG_MACH_M3_JPN_DCM)
+			.h_sw = 10,
+		#else
 		.h_sw = 5,
+		#endif
 		.v_fp = 13,
 		.v_fpe = 1,
 		.v_bp = 1,
@@ -529,7 +534,7 @@ static struct s3cfb_lcd ea8061 = {
 	.p_width = 74,
 	.p_height = 131,
 	.bpp = 24,
-	.freq = 58,
+	.freq = 60,
 
 	/* minumun value is 0 except for wr_act time. */
 	.cpu_timing = {
@@ -541,7 +546,7 @@ static struct s3cfb_lcd ea8061 = {
 
 	.timing = {
 		.h_fp = 52,
-		.h_bp = 121,
+		.h_bp = 96,
 		.h_sw = 4,
 		.v_fp = 13,
 		.v_fpe = 1,
@@ -609,7 +614,7 @@ static struct s3cfb_lcd ea8061 = {
 	.p_width = 64,
 	.p_height = 106,
 	.bpp = 24,
-	.freq = 58,
+	.freq = 60,
 
 	/* minumun value is 0 except for wr_act time. */
 	.cpu_timing = {
@@ -621,7 +626,7 @@ static struct s3cfb_lcd ea8061 = {
 
 	.timing = {
 		.h_fp = 52,
-		.h_bp = 121,
+		.h_bp = 96,
 		.h_sw = 4,
 		.v_fp = 13,
 		.v_fpe = 1,
@@ -803,52 +808,8 @@ static struct s3cfb_lcd lms501xx = {
 	},
 };
 #endif
-
-#ifdef CONFIG_FB_S5P_NT71391
-/* for Geminus based on MIPI-DSI interface */
-static struct s3cfb_lcd nt71391 = {
-	.name = "nt71391",
-	.width = 1280,
-	.height = 800,
-	.p_width = 172,
-	.p_height = 108,
-	.bpp = 24,
-	.freq = 60,
-
-	/* minumun value is 0 except for wr_act time. */
-	.cpu_timing = {
-		.cs_setup = 0,
-		.wr_setup = 0,
-		.wr_act = 1,
-		.wr_hold = 0,
-	},
-
-	.timing = {
-		.h_fp = 25,
-		.h_bp = 25,
-		.h_sw = 41,
-		.v_fp = 8, /* spec = 3 */
-		.v_fpe = 1,
-		.v_bp = 3,
-		.v_bpe = 1,
-		.v_sw = 6,
-		/* v_fp=stable_vfp + cmd_allow_len + mask_len*/
-		.cmd_allow_len = 7,
-		.stable_vfp = 1,
-	},
-
-	.polarity = {
-		.rise_vclk = 1,
-		.inv_hsync = 0,
-		.inv_vsync = 0,
-		.inv_vden = 0,
-	},
-};
-#endif
-
 static int reset_lcd(void)
 {
-#if defined(GPIO_MLCD_RST)
 	int err;
 
 	err = gpio_request(GPIO_MLCD_RST, "MLCD_RST");
@@ -865,23 +826,18 @@ static int reset_lcd(void)
 	gpio_set_value(GPIO_MLCD_RST, 1);
 	usleep_range(5000, 5000);
 	gpio_free(GPIO_MLCD_RST);
-#endif
 	return 0;
 }
 
 static void lcd_cfg_gpio(void)
 {
-#if defined(GPIO_MLCD_RST)
-
 	/* MLCD_RST */
 	s3c_gpio_cfgpin(GPIO_MLCD_RST, S3C_GPIO_OUTPUT);
 	s3c_gpio_setpull(GPIO_MLCD_RST, S3C_GPIO_PULL_NONE);
-#endif
-#if defined(GPIO_LCD_22V_EN_00)
+
 	/* LCD_EN */
 	s3c_gpio_cfgpin(GPIO_LCD_22V_EN_00, S3C_GPIO_OUTPUT);
 	s3c_gpio_setpull(GPIO_LCD_22V_EN_00, S3C_GPIO_PULL_NONE);
-#endif
 
 	return;
 }
@@ -944,69 +900,6 @@ out:
 return 0;
 
 }
-#elif defined(CONFIG_FB_S5P_NT71391)
-static int lcd_power_on(void *ld, int enable)
-{
-	int err;
-
-	printk(KERN_INFO "NT71391 %s : enable=%d\n", __func__, enable);
-
-	err = gpio_request(GPIO_LCD_EN, "LCD_EN");
-	if (err) {
-		printk(KERN_ERR "failed to request LCD_EN control\n");
-		return -EPERM;
-	}
-
-	if (enable)
-		gpio_set_value(GPIO_LCD_EN, GPIO_LEVEL_HIGH);
-	else
-		gpio_set_value(GPIO_LCD_EN, GPIO_LEVEL_LOW);
-
-	gpio_free(GPIO_LCD_EN);
-
-	return 0;
-}
-
-#ifdef CONFIG_BACKLIGHT_LP855X
-#define EPROM_CFG5_ADDR	0xA5
-#define EPROM_A5_VAL	0xA0 /* PWM_DIRECT(7)=1, PS_MODE(6:4)=4drivers*/
-#define EPROM_A5_MASK	0x0F /* PWM_FREQ(3:0) : mask */
-
-static struct lp855x_rom_data lp8556_eprom_arr[] = {
-	{EPROM_CFG5_ADDR, EPROM_A5_VAL, EPROM_A5_MASK},
-};
-
-static struct lp855x_platform_data lp8856_bl_pdata = {
-	.mode		= PWM_BASED,
-	.device_control	= PWM_CONFIG(LP8556),
-	.load_new_rom_data = 1,
-	.size_program	= ARRAY_SIZE(lp8556_eprom_arr),
-	.rom_data	= lp8556_eprom_arr,
-	.use_gpio_en	= 1,
-	.gpio_en	= GPIO_LED_BACKLIGHT_RESET,
-	.power_on_udelay = 1000,
-};
-
-static struct i2c_board_info i2c_devs24_emul[] __initdata = {
-	{
-		I2C_BOARD_INFO("lp8556", (0x58 >> 1)),
-		.platform_data	= &lp8856_bl_pdata,
-	},
-};
-static int lcd_bl_init(void)
-{
-	i2c_register_board_info(24, i2c_devs24_emul,
-				ARRAY_SIZE(i2c_devs24_emul));
-
-	return 0;
-}
-#endif
-
-#ifdef CONFIG_FB_S5P_MDNIE
-static struct lcd_platform_data nt71391_platform_data = {
-};
-#endif
-
 #else
 static int lcd_power_on(void *ld, int enable)
 {
@@ -1022,18 +915,15 @@ static int lcd_power_on(void *ld, int enable)
 		return -EPERM;
 	}
 
-#if defined(GPIO_LCD_22V_EN_00)
 	err = gpio_request(GPIO_LCD_22V_EN_00, "LCD_EN");
 	if (err) {
 		printk(KERN_ERR "failed to request GPM4[4] for "
 			"LCD_2.2V_EN control\n");
 		return -EPERM;
 	}
-#endif
+
 	if (enable) {
-#if defined(GPIO_LCD_22V_EN_00)
 		gpio_set_value(GPIO_LCD_22V_EN_00, GPIO_LEVEL_HIGH);
-#endif
 
 #if defined(CONFIG_MACH_T0)
 		regulator = regulator_get(NULL, "vcc_1.8v_lcd");
@@ -1081,19 +971,16 @@ static int lcd_power_on(void *ld, int enable)
 			regulator_force_disable(regulator);
 		regulator_put(regulator);
 #endif
-#if defined(GPIO_LCD_22V_EN_00)
 		gpio_set_value(GPIO_LCD_22V_EN_00, GPIO_LEVEL_LOW);
-#endif
 		gpio_set_value(GPIO_MLCD_RST, 0);
 	}
 
 out:
 /* Release GPIO */
 	gpio_free(GPIO_MLCD_RST);
-#if defined(GPIO_LCD_22V_EN_00)
 	gpio_free(GPIO_LCD_22V_EN_00);
-#endif
-	return 0;
+return 0;
+
 }
 #endif
 
@@ -1179,10 +1066,6 @@ void __init mipi_fb_init(void)
 #if defined(CONFIG_FB_S5P_S6D6AA1)
 	dsim_lcd_info->lcd_panel_info = (void *)&s6d6aa1;
 #endif
-	
-#if defined(CONFIG_FB_S5P_NT71391)
-	dsim_lcd_info->lcd_panel_info = (void *)&nt71391;
-#endif
 
 #if defined(CONFIG_MACH_T0) && defined(CONFIG_FB_S5P_S6EVR02) && defined(GPIO_OLED_ID)
 	if (!gpio_get_value(GPIO_OLED_ID)) {	/* for EA8061 DDI */
@@ -1205,11 +1088,6 @@ void __init mipi_fb_init(void)
 	dsim_pd->dsim_info->p = 3;
 	dsim_pd->dsim_info->m = 110;
 	dsim_pd->dsim_info->s = 1;
-#elif defined(CONFIG_FB_S5P_NT71391)
-	/* 230Mbps */
-	dsim_pd->dsim_info->p = 3;
-	dsim_pd->dsim_info->m = 115;
-	dsim_pd->dsim_info->s = 1;
 #else
 	/* 500Mbps */
 	dsim_pd->dsim_info->p = 3;
@@ -1225,11 +1103,6 @@ void __init mipi_fb_init(void)
 	platform_device_register(&s5p_device_dsim);
 
 	/*s3cfb_set_platdata(&fb_platform_data);*/
-	
-#if defined(CONFIG_FB_S5P_NT71391)
-	lcd_bl_init();
-#endif
-
 }
 #endif
 
@@ -1270,9 +1143,6 @@ struct s3c_platform_fb fb_platform_data __initdata = {
 #if defined(CONFIG_FB_S5P_LMS501XX)
 	.lcd		= &lms501xx
 #endif
-#if defined(CONFIG_FB_S5P_NT71391)
-	.lcd		= &nt71391
-#endif
 };
 #endif
 
@@ -1281,9 +1151,6 @@ static struct platform_mdnie_data mdnie_data = {
 	.display_type	= -1,
 #if defined(CONFIG_FB_S5P_S6C1372)
 	.lcd_pd		= &s6c1372_platform_data,
-#endif
-#if defined(CONFIG_FB_S5P_NT71391)
-	.lcd_pd		= &nt71391_platform_data,
 #endif
 };
 #endif

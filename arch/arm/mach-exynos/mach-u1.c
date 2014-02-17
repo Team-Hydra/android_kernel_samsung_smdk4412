@@ -155,7 +155,7 @@
 #include <linux/mdnie.h>
 #endif
 
-#include <../../../drivers/video/samsung/s3cfb.h>
+#include <plat/fb-s5p.h>
 #include "u1.h"
 
 #include <mach/sec_debug.h>
@@ -839,26 +839,12 @@ static int m5mo_power(int enable)
 
 	printk(KERN_DEBUG "%s %s\n", __func__, enable ? "on" : "down");
 	if (enable) {
-#if defined(CONFIG_TARGET_LOCALE_NA)
-		exynos_cpufreq_lock(DVFS_LOCK_ID_CAM, 1);
 		ret = m5mo_power_on();
-		exynos_cpufreq_lock_free(DVFS_LOCK_ID_CAM);
-#else
-
-		ret = m5mo_power_on();
-#endif
 		if (unlikely(ret))
 			goto error_out;
-	} else {
-#if defined(CONFIG_TARGET_LOCALE_NA)
-		exynos_cpufreq_lock(DVFS_LOCK_ID_CAM, 1);
+	} else
 		ret = m5mo_power_down();
-		exynos_cpufreq_lock_free(DVFS_LOCK_ID_CAM);
-#else
 
-		ret = m5mo_power_down();
-#endif
-	}
 	ret = s3c_csis_power(enable);
 	m5mo_flash_power(enable);
 
@@ -4605,94 +4591,6 @@ static struct sec_bat_adc_table_data temper_table_ADC7[] =  {
 	{ 1669,	 -60 },
 	{ 1688,	 -70 },
 };
-#endif
-/* temperature table for ADC 7 */
-#ifdef CONFIG_TARGET_LOCALE_NA
-static struct sec_bat_adc_table_data  temper_table_ADC7[] =  {
-	{  145,  670 },
-	{  165,  660 },
-	{  185,  650 },
-	{  205,  640 },
-	{  225,  630 },
-	{  245,  620 },
-	{  265,  610 },
-	{  285,  600 },
-	{  305,  590 },
-	{  325,  580 },
-	{  345,  570 },
-	{  365,  560 },
-	{  385,  550 },
-	{  405,  540 },
-	{  425,  530 },
-	{  445,  520 },
-	{  465,  510 },
-	{  485,  500 },
-	{  505,  490 },
-	{  525,  480 },
-	{  545,  470 },
-	{  565,  460 },
-	{  585,  450 },
-	{  605,  440 },
-	{  625,  430 },
-	{  645,  420 },
-	{  665,  410 },
-	{  685,  400 },
-	{  705,  390 },
-	{  725,  380 },
-	{  745,  370 },
-	{  765,  360 },
-	{  785,  350 },
-	{  805,  340 },
-	{  825,  330 },
-	{  845,  320 },
-	{  865,  310 },
-	{  885,  300 },
-	{  905,  290 },
-	{  925,  280 },
-	{  945,  270 },
-	{  965,  260 },
-	{  995,  250 },
-	{ 1015,  240 },
-	{ 1045,  230 },
-	{ 1065,  220 },
-	{ 1085,  210 },
-	{ 1105,  200 },
-	{ 1125,  190 },
-	{ 1145,  180 },
-	{ 1165,  170 },
-	{ 1185,  160 },
-	{ 1205,  150 },
-	{ 1225,  140 },
-	{ 1245,  130 },
-	{ 1265,  120 },
-	{ 1285,  110 },
-	{ 1305,  100 },
-	{ 1335,   90 },
-	{ 1365,   80 },
-	{ 1395,   70 },
-	{ 1425,   60 },
-	{ 1455,   50 },
-	{ 1475,   40 },
-	{ 1495,   30 },
-	{ 1515,   20 },
-	{ 1535,   10 },
-	{ 1545,    0 },
-	{ 1555,  -10 },
-	{ 1565,  -20 },
-	{ 1575,  -30 },
-	{ 1585,  -40 },
-	{ 1595,  -50 },
-	{ 1605,  -60 },
-	{ 1615,  -70 },
-	{ 1625,  -80 },
-	{ 1635,  -90 },
-	{ 1645,  -100 },
-	{ 1655,  -110 },
-	{ 1665,  -120 },
-	{ 1675,  -130 },
-	{ 1685,  -140 },
-};
-
 #else
 /* temperature table for ADC 7 */
 static struct sec_bat_adc_table_data temper_table_ADC7[] = {
@@ -5262,7 +5160,7 @@ struct gpio_keys_button u1_buttons[] = {
 		.isr_hook = sec_debug_check_crash_key,
 		.debounce_interval = 10,
 	},			/* power key */
-#if !defined(CONFIG_MACH_U1_NA_SPR) && !defined(CONFIG_MACH_U1_NA_USCC) && !defined(CONFIG_TARGET_LOCALE_NAATT_TEMP)
+#if !defined(CONFIG_MACH_U1_NA_SPR) && !defined(CONFIG_MACH_U1_NA_USCC)
 	{
 		.code = KEY_HOME,
 		.gpio = GPIO_OK_KEY,
@@ -5353,7 +5251,7 @@ static struct sec_jack_buttons_zone sec_jack_buttons_zones[] = {
 		/* 0 <= adc <=170, stable zone */
 		.code = KEY_MEDIA,
 		.adc_low = 0,
-#if defined(CONFIG_TARGET_LOCALE_NTT) || defined(CONFIG_TARGET_LOCALE_NA)
+#if defined(CONFIG_TARGET_LOCALE_NTT)
 		.adc_high = 150,
 #else
 		.adc_high = 170,
@@ -5362,7 +5260,7 @@ static struct sec_jack_buttons_zone sec_jack_buttons_zones[] = {
 	{
 		/* 171 <= adc <= 370, stable zone */
 		.code = KEY_VOLUMEUP,
-#if defined(CONFIG_TARGET_LOCALE_NTT) || defined(CONFIG_TARGET_LOCALE_NA)
+#if defined(CONFIG_TARGET_LOCALE_NTT)
 		.adc_low = 151,
 #else
 		.adc_low = 171,
@@ -7359,9 +7257,8 @@ static struct platform_device *smdkc210_devices[] __initdata = {
 	&exynos4_device_pd[PD_LCD1],
 	&exynos4_device_pd[PD_CAM],
 	&exynos4_device_pd[PD_TV],
-#ifndef CONFIG_TARGET_LOCALE_NA
 	&exynos4_device_pd[PD_GPS],
-#endif /* CONFIG_TARGET_LOCALE_NA */
+
 #if defined(CONFIG_WIMAX_CMC)
 	&s3c_device_cmc732,
 #endif
